@@ -5,6 +5,7 @@ from datetime import datetime
 from app.config import settings
 from app.database import get_db, engine
 from app.models import User
+from app.routes import auth 
 
 app = FastAPI(
     title=settings.app_name,
@@ -21,9 +22,12 @@ app = FastAPI(
     """
 )
 
-# ============================================
+# INCLUIR ROTAS
+
+# Rotas de autenticação
+app.include_router(auth.router)
+
 # ENDPOINTS BÁSICOS
-# ============================================
 
 @app.get("/")
 async def root():
@@ -60,7 +64,7 @@ async def info():
         "name": settings.app_name,
         "version": settings.app_version,
         "debug": settings.debug,
-        "database_url": settings.database_url[:30] + "...",  # Mostra só o início por segurança
+        "database_url": settings.database_url[:30] + "...",
         "jwt_algorithm": settings.algorithm,
         "token_expire_minutes": settings.access_token_expire_minutes
     }
