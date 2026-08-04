@@ -106,3 +106,55 @@ class AniListService:
                 saved.append(anime)
         print(f"✅ {len(saved)} animes salvos!")
         return saved
+
+    def search_anime(self, query: str, per_page: int = 10) -> List[Dict[str, Any]]:
+        graphql_query = """
+        query ($query: String, $perPage: Int) {
+            Page(perPage: $perPage) {
+                media(search: $query, type: ANIME, sort: POPULARITY_DESC) {
+                    id
+                    title { romaji english native }
+                    description
+                    episodes
+                    seasonYear
+                    coverImage { large }
+                    status
+                    genres
+                }
+            }
+        }
+        """
+        
+        response = self.client.post(
+            self.BASE_URL,
+            json={"query": graphql_query, "variables": {"query": query, "perPage": per_page}}
+        )
+        response.raise_for_status()
+        
+        data = response.json()
+        return data.get("data", {}).get("Page", {}).get("media", [])
+
+    def search_anime_by_id(self, anime_id: int) -> Optional[Dict[str, Any]]:
+        graphql_query = """
+        query ($id: Int) {
+            Media(id: $id, type: ANIME) {
+                id
+                title { romaji english native }
+                description
+                episodes
+                seasonYear
+                coverImage { large }
+                status
+                genres
+            }
+        }
+        """
+        
+        response = self.client.post(
+            self.BASE_URL,
+            json={"query": graphql_query, "variables": {"id": anime_id}}
+        )
+        response.raise_for_status()
+        
+        data = response.json()
+        return data.get("data", {}).get("Media")

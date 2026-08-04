@@ -13,7 +13,7 @@ engine = create_engine(
     max_overflow=10        # Conexões extras se necessário
 )
 
-# 2. Fábrica de sessões
+# Sessões
 #    - sessionmaker retorna uma classe que cria sessões
 #    - autocommit=False → gerenciamos transações manualmente
 #    - autoflush=False → só enviamos para o banco quando explícito

@@ -5,7 +5,8 @@ from datetime import datetime
 from app.config import settings
 from app.database import get_db, engine
 from app.models import User
-from app.routes import auth 
+from app.routes import auth_router, list_router, animes_router
+
 
 app = FastAPI(
     title=settings.app_name,
@@ -25,7 +26,9 @@ app = FastAPI(
 # INCLUIR ROTAS
 
 # Rotas de autenticação
-app.include_router(auth.router)
+app.include_router(auth_router)
+app.include_router(list_router)
+app.include_router(animes_router)
 
 # ENDPOINTS BÁSICOS
 
