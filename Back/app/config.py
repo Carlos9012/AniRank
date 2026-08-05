@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 
@@ -40,7 +41,13 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    gemini_api_key: Optional[str] = Field(None, description="Chave da API do Gemini")
+    use_gemini: bool = Field(default=False, description="Usar Gemini para interpretação")
+
 settings = Settings()
 
 if not settings.database_url:
     raise ValueError("DATABASE_URL não configurada! Verifique seu .env")
+
+if not settings.secret_key:
+    raise ValueError("SECRET_KEY não configurada! Verifique seu .env")

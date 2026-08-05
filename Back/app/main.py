@@ -1,12 +1,10 @@
-from fastapi import FastAPI, Depends
+﻿from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from datetime import datetime
 
 from app.config import settings
-from app.database import get_db, engine
-from app.models import User
-from app.routes import auth_router, list_router, animes_router
-
+from app.database import get_db
+from app.routes import auth_router, list_router, animes_router, recommendations
 
 app = FastAPI(
     title=settings.app_name,
@@ -24,11 +22,10 @@ app = FastAPI(
 )
 
 # INCLUIR ROTAS
-
-# Rotas de autenticação
 app.include_router(auth_router)
 app.include_router(list_router)
 app.include_router(animes_router)
+app.include_router(recommendations.router)
 
 # ENDPOINTS BÁSICOS
 
