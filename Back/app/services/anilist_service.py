@@ -1,6 +1,6 @@
 import httpx
 from typing import List, Dict, Any, Optional
-from app.models import Anime, Genre, AiringStatus
+from app.models import Anime, Genre, AiringStatus, MediaFormat, MediaSource
 from app.database import SessionLocal
 
 class AniListService:
@@ -24,6 +24,25 @@ class AniListService:
             "HIATUS": AiringStatus.hiatus,
         }
         return mapping.get(status)
+
+    def _parse_media_format(self, format_str: str) -> Optional[MediaFormat]:
+        mapping = {
+            "TV": MediaFormat.TV,
+            "TV_SHORT": MediaFormat.TV_SHORT,
+            "MOVIE": MediaFormat.MOVIE,
+            "OVA": MediaFormat.OVA,
+            "SPECIAL": MediaFormat.SPECIAL,
+            "ONA": MediaFormat.ONA,  
+        }
+        return mapping.get(format_str)
+
+
+    def _parse_media_source(self, source_str: str) -> Optional[MediaSource]:
+        mapping = {
+            "ORIGINAL": MediaSource.ORIGINAL,
+            "ANIME": MediaSource.ANIME,
+        }
+        return mapping.get(source_str)
     
     def get_popular_anime(self, per_page: int = 50) -> List[Dict[str, Any]]:
         query = """
@@ -55,7 +74,7 @@ class AniListService:
             existing = db.query(Anime).filter(Anime.external_id == anime_data["id"]).first()
             if existing:
                 print(f"⚠️ Anime {anime_data['title']['romaji']} já existe")
-                return existing
+                return existing.id
             
             title = (
                 anime_data.get("title", {}).get("english") or
@@ -71,7 +90,9 @@ class AniListService:
                 episodes=anime_data.get("episodes"),
                 release_year=anime_data.get("seasonYear"),
                 cover_image_url=anime_data.get("coverImage", {}).get("large"),
-                airing_status=self._parse_airing_status(anime_data.get("status"))
+                airing_status=self._parse_airing_status(anime_data.get("status")),
+                format=self._parse_media_format(anime_data.get("format")),
+                source=self._parse_media_source(anime_data.get("source"))
             )
             db.add(anime)
             db.flush()
@@ -87,7 +108,7 @@ class AniListService:
             
             db.commit()
             print(f"✅ Anime '{title}' salvo!")
-            return anime
+            return anime.id
         except Exception as e:
             db.rollback()
             print(f"❌ Erro: {e}")

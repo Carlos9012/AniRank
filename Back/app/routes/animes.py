@@ -75,27 +75,27 @@ def import_anime(
                 "external_id": existing.external_id,
                 "title": existing.title,
                 "year": existing.release_year,
-                "cover": existing.cover_image_url
+                "cover": existing.cover_image_url,
+                "genres": [g.name for g in existing.genres]
             }
         }
-    
+
     try:
         with AniListService() as service:
-            results = service.search_anime_by_id(external_id)
-            if not results:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Anime não encontrado no AniList"
-                )
-            
-            saved_anime = service.save_anime_to_db(results)
-            
+            anime_data = service.search_anime_by_id(external_id)
+            if not anime_data:
+                raise HTTPException(404, "Anime não encontrado no AniList")
+
+            saved_anime_id = service.save_anime_to_db(anime_data)
+
+            if not saved_anime_id:
+                raise HTTPException(500, "Erro ao salvar anime")
+
+            saved_anime = db.query(Anime).filter(Anime.id == saved_anime_id).first()
+
             if not saved_anime:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Erro ao salvar anime no banco"
-                )
-            
+                raise HTTPException(500, "Anime salvo mas não encontrado")
+
             return {
                 "message": "Anime importado com sucesso",
                 "anime": {
@@ -107,12 +107,10 @@ def import_anime(
                     "genres": [g.name for g in saved_anime.genres]
                 }
             }
-            
+
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao importar anime: {str(e)}"
-        )
+        print(f"❌ Erro: {e}")
+        raise HTTPException(500, f"Erro ao importar anime: {str(e)}")
 
 
 @router.get("/")

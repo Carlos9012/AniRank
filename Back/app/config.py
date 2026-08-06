@@ -41,6 +41,11 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    media_type: str = Field(
+        default="ANIME",
+        description="Tipo de mídia para busca: ANIME, MANGA, ou null para ambos"
+    )
+
     gemini_api_key: Optional[str] = Field(None, description="Chave da API do Gemini")
     use_gemini: bool = Field(default=False, description="Usar Gemini para interpretação")
 

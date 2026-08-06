@@ -9,6 +9,19 @@ from sqlalchemy.orm import relationship
 
 from app.database import Base
 
+class MediaFormat(str, enum.Enum):
+    TV = "TV"
+    TV_SHORT = "TV_SHORT"
+    MOVIE = "MOVIE"
+    OVA = "OVA"
+    SPECIAL = "SPECIAL"
+    ONA = "ONA"
+
+
+class MediaSource(str, enum.Enum):
+    ORIGINAL = "ORIGINAL"
+    ANIME = "ANIME"
+
 
 class WatchStatus(str, enum.Enum):
     watching = "watching"
@@ -74,6 +87,8 @@ class Anime(Base):
     release_year = Column(Integer, nullable=True)
     cover_image_url = Column(String(500), nullable=True)
     airing_status = Column(Enum(AiringStatus), nullable=True)
+    format = Column(Enum(MediaFormat), nullable=True)
+    source = Column(Enum(MediaSource), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
     genres = relationship("Genre", secondary=anime_genre_association, back_populates="animes")
