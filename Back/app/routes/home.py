@@ -4,7 +4,7 @@ from typing import List
 
 from app.database import get_db
 from app.auth.dependencies import get_current_user
-from app.models import User, UserAnimeStatus
+from app.models import User, UserAnimeStatus, Anime
 from app.recommendation.collaborative import CollaborativeRecommender
 
 router = APIRouter(prefix="/home", tags=["Home"])

@@ -37,7 +37,7 @@ class ContentBasedRecommender:
             
             genres_text = " ".join([g.name for g in anime.genres])
             synopsis = anime.synopsis or ""
-            text = f"{genres_text} {synopsis}"
+            text = f"{genres_text} {genres_text} {synopsis}"
             
             data.append({
                 "id": anime.id,
@@ -86,13 +86,14 @@ class ContentBasedRecommender:
                 anime = self.db.query(Anime).filter(
                     Anime.id == anime_id
                 ).first()
-                
-                results.append({
-                    "id": int(self.anime_ids[i]),
-                    "title": self.titles[i],
-                    "similarity": float(similarities[i]),
-                    "cover": anime.cover_image_url if anime else None,
-                    "year": anime.release_year if anime else None
-                })
+
+                if similarities[i] > 0.1:
+                    results.append({
+                        "id": int(self.anime_ids[i]),
+                        "title": self.titles[i],
+                        "similarity": float(similarities[i]),
+                        "cover": anime.cover_image_url if anime else None,
+                        "year": anime.release_year if anime else None
+                    })
         
         return results

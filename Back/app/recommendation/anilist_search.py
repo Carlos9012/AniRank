@@ -2,9 +2,10 @@
 import requests
 import pandas as pd
 import numpy as np
+import re
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from typing import List, Dict, Any, Optional
+from typing import List, Dict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from app.config import settings
@@ -67,53 +68,133 @@ class AniListSearchRecommender:
 
     def _build_variables_declaration(self, variables: dict) -> str:
         declarations = []
+        
         for key, value in variables.items():
             if key == "perPage":
                 continue
+            
+            if key == "allowedFormats":
+                declarations.append(f"${key}: [MediaFormat]")
+                continue
+            
             if isinstance(value, list):
-                declarations.append(f"${key}: [String]")
+                if value and isinstance(value[0], int):
+                    declarations.append(f"${key}: [Int]")
+                else:
+                    declarations.append(f"${key}: [String]")
             elif isinstance(value, bool):
                 declarations.append(f"${key}: Boolean")
             elif isinstance(value, int):
                 declarations.append(f"${key}: Int")
             else:
                 declarations.append(f"${key}: String")
+        
         declarations.append("$perPage: Int")
         return ", ".join(declarations)
-
+    
     MEDIA_TYPE = "ANIME" 
 
     def _get_media_type_field(self) -> str:
         return f"type: {self.MEDIA_TYPE}"
 
+    def _filter_by_franchise(self, results: List[Dict], limit: int = 5) -> List[Dict]:
+        if not results:
+            return []
+        
+        sequel_keywords = [
+            "Season", "Part", "Chapter", "Arc", "Final", "NEW", "BorN", 
+            "Hero", "2", "3", "4", "5", "II", "III", "IV", "V",
+            "Shippuuden", "Z", "GT", "Super", "Remake", "Reboot"
+        ]
+        
+        franchise_map = {}
+        
+        for anime in results:
+            title = anime.get("title", "")
+            
+            base_title = title
+            for keyword in sequel_keywords:
+                if keyword in title:
+                    parts = title.split(keyword)
+                    base_title = parts[0].strip()
+                    break
+            
+            if base_title == title:
+                base_title = title
+            
+            if base_title not in franchise_map:
+                franchise_map[base_title] = anime
+            else:
+                current_score = franchise_map[base_title].get("score", 0)
+                new_score = anime.get("score", 0)
+                if new_score > current_score:
+                    franchise_map[base_title] = anime
+        
+        results = list(franchise_map.values())[:limit]
+        print(f"📦 Após filtro de franquia: {len(results)} animes únicos")
+        return results
+
     def _build_query(self, interpreted: Dict, limit: int) -> tuple:
         query_fields = []
         variables = {"perPage": limit}
 
+        # SEMPRE ADICIONA type: ANIME
         query_fields.append(self._get_media_type_field())
 
-        # 1. search
-        if interpreted.get("search"):
+        # SEARCH: define search_text ANTES de usar
+        search_text = interpreted.get("search")
+        
+        if not search_text:
+            description = interpreted.get("description_en", "")
+            clean_desc = re.sub(r'[^\w\s]', '', description.lower())
+            keywords = clean_desc.split()
+            stopwords = {
+                "i", "want", "me", "you", "he", "she", "it", "we", "they", 
+                "the", "a", "an", "of", "for", "on", "at", "to", "in", "with", 
+                "without", "and", "or", "but", "by", "from", "into", "through", 
+                "during", "including", "anime", "quero", "gostaria", "procuro", 
+                "busco", "like", "similar", "about"
+            }
+            keywords = [w for w in keywords if w not in stopwords and len(w) > 2]
+            if keywords:
+                search_text = " ".join(keywords[:4])
+                print(f"🔍 Palavras-chave extraídas: {search_text}")
+            else:
+                search_text = None
+
+        if search_text:
             query_fields.append("search: $search")
-            variables["search"] = interpreted["search"]
+            variables["search"] = search_text
+            print(f"🔍 Search final: {search_text}")
 
-        # 2. genres
+        # GENRES
         if interpreted.get("genres"):
+            main_genre = interpreted["genres"][0]
             query_fields.append("genre_in: $genres")
-            variables["genres"] = interpreted["genres"]
+            variables["genres"] = [main_genre]
+            print(f"🏷️ Gênero principal: {main_genre}")
+            
+            if len(interpreted["genres"]) > 1:
+                additional = " ".join(interpreted["genres"][1:])
+                if search_text:
+                    variables["search"] = f"{search_text} {additional}"
+                else:
+                    variables["search"] = additional
+                    query_fields.append("search: $search")
+                print(f"🔍 Busca com gêneros adicionais: {additional}")
 
-        # 3. excluded_genres
+        # EXCLUDED GENRES
         if interpreted.get("excluded_genres"):
             query_fields.append("genre_not_in: $excludedGenres")
             variables["excludedGenres"] = interpreted["excluded_genres"]
 
-        # 4. year
+        # YEAR
         if interpreted.get("year") is not None:
             query_fields.append("seasonYear: $year")
             variables["year"] = interpreted["year"]
             print(f"📅 Ano: {interpreted['year']}")
 
-        # 5. score_range
+        # SCORE
         if interpreted.get("min_score") is not None:
             query_fields.append("averageScore_greater: $minScore")
             variables["minScore"] = interpreted["min_score"]
@@ -121,32 +202,22 @@ class AniListSearchRecommender:
             query_fields.append("averageScore_lesser: $maxScore")
             variables["maxScore"] = interpreted["max_score"]
 
-        # 6. status
+        # STATUS
         if interpreted.get("status"):
             query_fields.append("status: $status")
             variables["status"] = interpreted["status"]
 
-        # 7. formats
-        """if interpreted.get("formats"):
-            query_fields.append("format_in: $formats")
-            variables["formats"] = interpreted["formats"]
-"""
-        # 8. excluded_formats
-        if interpreted.get("excluded_formats"):
-            query_fields.append("format_not_in: $excludedFormats")
-            variables["excludedFormats"] = interpreted["excluded_formats"]
-
-        # 9. country
+        # COUNTRY
         if interpreted.get("country"):
             query_fields.append("countryOfOrigin: $country")
             variables["country"] = interpreted["country"]
 
-        # 10. source
+        # SOURCE
         if interpreted.get("source"):
             query_fields.append("source: $source")
             variables["source"] = interpreted["source"]
 
-        # 11. episodes_range
+        # EPISODES
         if interpreted.get("min_episodes") is not None:
             query_fields.append("episodes_greater: $minEpisodes")
             variables["minEpisodes"] = interpreted["min_episodes"]
@@ -154,7 +225,7 @@ class AniListSearchRecommender:
             query_fields.append("episodes_lesser: $maxEpisodes")
             variables["maxEpisodes"] = interpreted["max_episodes"]
 
-        # 12. is_adult
+        # ADULT
         if interpreted.get("is_adult") is not None:
             query_fields.append("isAdult: $isAdult")
             variables["isAdult"] = interpreted["is_adult"]
@@ -188,6 +259,7 @@ class AniListSearchRecommender:
         """
 
         print(f"📝 Query gerada com filtros: {fields_str}")
+        print(f"📦 Variáveis: {variables}")
         return query, variables
 
     def _execute_query(self, query: str, variables: dict) -> List[Dict]:
@@ -263,7 +335,6 @@ class AniListSearchRecommender:
         print(f"🔍 BUSCA POR DESCRIÇÃO: '{description}'")
         print("=" * 60)
 
-        # CAMADA 1: IA interpreta a descrição
         if self.use_gemini and self.gemini:
             print("🧠 Usando Gemini para interpretar...")
             try:
@@ -278,14 +349,12 @@ class AniListSearchRecommender:
             print("⚠️ Gemini DESATIVADO. Usando fallback.")
             interpreted = self._fallback_interpretation(description)
 
-        # CAMADA 2: Verifica se há intervalo de anos
         has_year_range = (
             interpreted.get("min_year") is not None and
             interpreted.get("max_year") is not None and
             interpreted["min_year"] != interpreted["max_year"]
         )
 
-        # CAMADA 3: Executa a busca
         if has_year_range:
             limit_per_year = max(1, limit // (interpreted["max_year"] - interpreted["min_year"] + 1))
             results = self.search_by_year_range(
@@ -303,7 +372,6 @@ class AniListSearchRecommender:
             query, variables = self._build_query(interpreted, limit)
             results = self._execute_query(query, variables)
 
-        # CAMADA 4: Formatar resultados
         formatted_results = []
         for anime in results:
             formatted_results.append({
@@ -322,5 +390,9 @@ class AniListSearchRecommender:
                 "synopsis": anime.get("description")
             })
 
+        filtered_results = self._filter_by_franchise(formatted_results, limit)
+
         print(f"📦 Total de resultados: {len(formatted_results)}")
-        return formatted_results
+        print(f"📦 Após filtro de franquia: {len(filtered_results)}")
+        
+        return filtered_results
