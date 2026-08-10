@@ -32,6 +32,7 @@ class UserAnimeUpdate(BaseModel):
 
 class UserAnimeResponse(BaseModel):
     id: int
+    external_id: Optional[int] = None
     user_id: int
     anime_id: int
     status: WatchStatus

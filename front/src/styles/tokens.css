@@ -1,0 +1,35 @@
+:root {
+  /* Cor — índigo noturno, não preto puro. O vermelhão é o selo hanko: usado com moderação. */
+  --bg: #15111f;
+  --surface: #1d1730;
+  --surface-raised: #271f3d;
+  --border: rgba(245, 241, 234, 0.09);
+  --border-strong: rgba(245, 241, 234, 0.18);
+
+  --ink: #f4f0ea;
+  --ink-muted: #a79ec2;
+  --ink-faint: #6f6689;
+
+  --hanko: #e8471f;       /* vermelhão do carimbo — selo de nota/avaliação */
+  --hanko-soft: rgba(232, 71, 31, 0.14);
+  --gold: #e3b34c;        /* destaque secundário — planejado/pendente */
+  --jade: #4caf82;        /* status positivo — completo */
+  --danger: #e0555a;
+
+  --font-display: "Bebas Neue", "Archivo Black", sans-serif;
+  --font-body: "Inter", -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", monospace;
+
+  --step-0: 0.9375rem;
+  --step-1: 1.125rem;
+  --step-2: 1.5rem;
+  --step-3: 2.25rem;
+  --step-4: 3.25rem;
+  --step-5: 4.5rem;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 18px;
+
+  --shadow-card: 0 12px 32px -12px rgba(0, 0, 0, 0.55);
+}

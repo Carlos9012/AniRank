@@ -1,0 +1,21 @@
+.foryou-header { padding: 3.5rem 0 1rem; }
+.foryou-header h1 span { color: var(--hanko); }
+.foryou-stats {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
+}
+.foryou-stat .eyebrow { display: block; margin-bottom: 0.2rem; }
+.foryou-stat strong {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+}
+.reco-card { position: relative; }
+.reco-card__reason {
+  margin-top: 0.5rem;
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  line-height: 1.4;
+}

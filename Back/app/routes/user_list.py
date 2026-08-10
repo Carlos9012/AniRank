@@ -1,11 +1,16 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, status
+﻿# app/routes/user_list.py
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 
 from app.database import get_db
-from app.models import User, Anime, UserAnimeStatus
 from app.auth.dependencies import get_current_user
-from app.schemas.user_anime import UserAnimeCreate, UserAnimeUpdate, UserAnimeResponse
+from app.models import User, Anime, UserAnimeStatus, WatchStatus
+from app.schemas.user_anime import (
+    UserAnimeCreate,
+    UserAnimeUpdate,
+    UserAnimeResponse
+)
 
 router = APIRouter(prefix="/list", tags=["Lista de Animes"])
 
@@ -18,10 +23,7 @@ def add_anime_to_list(
 ):
     anime = db.query(Anime).filter(Anime.id == data.anime_id).first()
     if not anime:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Anime não encontrado"
-        )
+        raise HTTPException(404, "Anime não encontrado")
     
     existing = db.query(UserAnimeStatus).filter(
         UserAnimeStatus.user_id == current_user.id,
@@ -29,10 +31,7 @@ def add_anime_to_list(
     ).first()
     
     if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Anime já está na lista. Use PUT para atualizar"
-        )
+        raise HTTPException(400, "Anime já está na lista. Use PUT para atualizar")
     
     user_anime = UserAnimeStatus(
         user_id=current_user.id,
@@ -50,6 +49,7 @@ def add_anime_to_list(
         "id": user_anime.id,
         "user_id": user_anime.user_id,
         "anime_id": user_anime.anime_id,
+        "external_id": anime.external_id,
         "status": user_anime.status,
         "score": user_anime.score,
         "notes": user_anime.notes,
@@ -65,6 +65,7 @@ def get_user_list(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    print(">>> AQUI É A VERSÃO ATUALIZADA! <<<")
     user_list = db.query(UserAnimeStatus).filter(
         UserAnimeStatus.user_id == current_user.id
     ).all()
@@ -76,6 +77,7 @@ def get_user_list(
             "id": item.id,
             "user_id": item.user_id,
             "anime_id": item.anime_id,
+            "external_id": anime.external_id if anime else None,
             "status": item.status,
             "score": item.score,
             "notes": item.notes,
@@ -100,10 +102,7 @@ def get_anime_status(
     ).first()
     
     if not user_anime:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Anime não encontrado na sua lista"
-        )
+        raise HTTPException(404, "Anime não encontrado na sua lista")
     
     anime = db.query(Anime).filter(Anime.id == anime_id).first()
     
@@ -111,6 +110,7 @@ def get_anime_status(
         "id": user_anime.id,
         "user_id": user_anime.user_id,
         "anime_id": user_anime.anime_id,
+        "external_id": anime.external_id if anime else None,
         "status": user_anime.status,
         "score": user_anime.score,
         "notes": user_anime.notes,
@@ -134,10 +134,7 @@ def update_anime_status(
     ).first()
     
     if not user_anime:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Anime não encontrado na sua lista"
-        )
+        raise HTTPException(404, "Anime não encontrado na sua lista")
     
     if data.status is not None:
         user_anime.status = data.status
@@ -155,6 +152,7 @@ def update_anime_status(
         "id": user_anime.id,
         "user_id": user_anime.user_id,
         "anime_id": user_anime.anime_id,
+        "external_id": anime.external_id if anime else None,
         "status": user_anime.status,
         "score": user_anime.score,
         "notes": user_anime.notes,
@@ -177,10 +175,7 @@ def remove_anime_from_list(
     ).first()
     
     if not user_anime:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Anime não encontrado na sua lista"
-        )
+        raise HTTPException(404, "Anime não encontrado na sua lista")
     
     db.delete(user_anime)
     db.commit()

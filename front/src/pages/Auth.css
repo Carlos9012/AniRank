@@ -1,0 +1,33 @@
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 2.5rem 2.25rem;
+}
+.auth-card__brand {
+  font-size: 2.4rem;
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+.auth-card__brand span { color: var(--hanko); }
+.auth-card__tagline {
+  text-align: center;
+  color: var(--ink-faint);
+  font-size: 0.85rem;
+  margin-bottom: 2rem;
+}
+.auth-card form { margin-top: 1.5rem; }
+.auth-card .btn { width: 100%; justify-content: center; margin-top: 0.5rem; }
+.auth-card__switch {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--ink-faint);
+}
+.auth-card__switch a { color: var(--hanko); font-weight: 600; }

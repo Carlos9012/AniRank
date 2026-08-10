@@ -1,0 +1,40 @@
+.discover-hero { padding: 3.5rem 0 2rem; text-align: center; }
+.discover-hero h1 span { color: var(--hanko); }
+.discover-hero p { max-width: 50ch; margin: 0.9rem auto 0; color: var(--ink-muted); }
+
+.discover-form {
+  max-width: 620px;
+  margin: 2rem auto 0;
+  display: flex;
+  gap: 0.6rem;
+}
+.discover-form textarea {
+  flex: 1;
+  resize: none;
+  height: 3.1rem;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 0.8rem 1rem;
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+.discover-form textarea:focus { border-color: var(--hanko); }
+
+.discover-examples {
+  max-width: 620px;
+  margin: 0.9rem auto 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.discover-examples button {
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  border: 1px solid var(--border);
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: transparent;
+}
+.discover-examples button:hover { color: var(--ink); border-color: var(--border-strong); }

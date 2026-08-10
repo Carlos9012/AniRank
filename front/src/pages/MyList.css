@@ -1,0 +1,22 @@
+.mylist-header { padding: 3rem 0 1rem; }
+.mylist-header h1 span { color: var(--hanko); }
+
+.status-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+.status-tab {
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.status-tab--active {
+  background: var(--hanko);
+  border-color: var(--hanko);
+  color: #fff5f0;
+}

@@ -68,12 +68,14 @@ class AniListService:
         response.raise_for_status()
         return response.json().get("data", {}).get("Page", {}).get("media", [])
     
-    def save_anime_to_db(self, anime_data: Dict[str, Any]) -> Optional[Anime]:
+    # app/services/anilist_service.py
+
+    def save_anime_to_db(self, anime_data: Dict[str, Any]) -> Optional[int]:
         db = SessionLocal()
         try:
             existing = db.query(Anime).filter(Anime.external_id == anime_data["id"]).first()
             if existing:
-                print(f"⚠️ Anime {anime_data['title']['romaji']} já existe")
+                print(f"ℹ️ Anime {anime_data['title']['romaji']} já existe. ID: {existing.id}")
                 return existing.id
             
             title = (
@@ -107,11 +109,14 @@ class AniListService:
                     anime.genres.append(genre)
             
             db.commit()
-            print(f"✅ Anime '{title}' salvo!")
+            print(f"✅ Anime '{title}' salvo! ID: {anime.id}")
             return anime.id
+            
         except Exception as e:
             db.rollback()
-            print(f"❌ Erro: {e}")
+            print(f"❌ Erro ao salvar anime: {e}")
+            import traceback
+            traceback.print_exc()
             return None
         finally:
             db.close()

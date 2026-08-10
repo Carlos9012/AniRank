@@ -1,0 +1,25 @@
+.score-badge {
+  --stamp-size: 3.25rem;
+  width: var(--stamp-size);
+  height: var(--stamp-size);
+  border-radius: 50%;
+  border: 2px solid var(--hanko);
+  color: var(--hanko);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-8deg);
+  background: rgba(21, 17, 31, 0.72);
+  backdrop-filter: blur(2px);
+  box-shadow: 0 0 0 3px rgba(232, 71, 31, 0.12);
+  flex-shrink: 0;
+}
+.score-badge__value {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.score-badge--sm { --stamp-size: 2.4rem; }
+.score-badge--sm .score-badge__value { font-size: 0.8rem; }
+.score-badge--lg { --stamp-size: 4.5rem; }
+.score-badge--lg .score-badge__value { font-size: 1.4rem; }

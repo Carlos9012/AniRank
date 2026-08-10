@@ -30,7 +30,7 @@ class Settings(BaseSettings):
         description="Algoritmo de assinatura JWT"
     )
     access_token_expire_minutes: int = Field(
-        default=30,
+        default=301440,
         description="Tempo de expiração do token JWT em minutos"
     )
     
