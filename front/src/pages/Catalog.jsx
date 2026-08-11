@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import * as animesApi from "../api/animes";
 import AnimeCard from "../components/AnimeCard";
@@ -20,6 +20,8 @@ export default function Catalog() {
   const [preview, setPreview] = useState(null);
   const navigate = useNavigate();
 
+  const searchTimeout = useRef(null);
+
   const loadCatalog = useCallback((p) => {
     setLoading(true);
     animesApi
@@ -30,33 +32,33 @@ export default function Catalog() {
 
   useEffect(() => loadCatalog(page), [page, loadCatalog]);
 
-  async function handleSearch(e) {
-    e.preventDefault();
-    if (!query.trim()) return;
-    setSearching(true);
-    try {
-      const data = await animesApi.searchAnilist(query, 8);
-      setSearchResults(data.results);
-    } finally {
+  useEffect(() => {
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
+
+    if (!query.trim()) {
+      setSearchResults(null);
       setSearching(false);
+      return;
     }
-  }
 
-  async function handleCardClick(result) {
-    setPreview({ loading: true, data: null, error: null, base: result });
-    try {
-      const data = await animesApi.searchAnilist(result.title, 5);
-      const exact =
-        data.results.find((r) => r.external_id === result.external_id) || data.results[0];
-      setPreview({ loading: false, data: exact || result, error: null, base: result });
-    } catch {
-      setPreview({ loading: false, data: null, error: "Não foi possível buscar no AniList agora.", base: result });
-    }
-  }
+    setSearching(true);
 
-  function closePreview() {
-    setPreview(null);
-  }
+    searchTimeout.current = setTimeout(async () => {
+      try {
+        const data = await animesApi.searchAnilist(query, 8);
+        setSearchResults(data.results);
+      } catch (error) {
+        console.error("Erro na busca:", error);
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(searchTimeout.current);
+  }, [query]);
 
   async function handleImport(externalId) {
     setImportingId(externalId);
@@ -69,6 +71,10 @@ export default function Catalog() {
     } finally {
       setImportingId(null);
     }
+  }
+
+  function closePreview() {
+    setPreview(null);
   }
 
   const totalPages = Math.ceil(catalog.total / PAGE_SIZE);
@@ -85,54 +91,55 @@ export default function Catalog() {
           explore o que a comunidade já importou.
         </p>
 
-        <form className="catalog-search" onSubmit={handleSearch}>
+        <div className="catalog-search">
           <input
             placeholder="Buscar por título — ex: Naruto"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <button className="btn btn-primary" type="submit" disabled={searching}>
-            {searching ? "…" : "Buscar"}
-          </button>
-        </form>
+          {searching && <span className="search-spinner">⌛</span>}
+        </div>
 
         {searchResults && (
           <div className="search-results">
-            {searchResults.length === 0 && (
+            {searchResults.length === 0 ? (
               <p style={{ color: "var(--ink-faint)", fontSize: "0.85rem" }}>
                 Nada encontrado no AniList para "{query}".
               </p>
-            )}
-            {searchResults.map((r) => (
-              <div
-                className="search-result search-result--clickable"
-                key={r.external_id}
-                role="button"
-                tabIndex={0}
-                onClick={() => handleCardClick(r)}
-                onKeyDown={(e) => e.key === "Enter" && handleCardClick(r)}
-              >
-                {r.cover && <img src={r.cover} alt="" />}
-                <div className="search-result__info">
-                  <strong>{r.title_english || r.title}</strong>
-                  <span>{r.year || "—"} · {(r.genres || []).slice(0, 3).join(", ")}</span>
-                </div>
-                <button
-                  className="btn btn-ghost"
-                  disabled={r.already_in_db || importingId === r.external_id}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleImport(r.external_id);
-                  }}
+            ) : (
+              searchResults.map((r) => (
+                <div
+                  className="search-result search-result--clickable"
+                  key={r.external_id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(`/anime/${r.external_id}`)}
+                  onKeyDown={(e) => e.key === "Enter" && navigate(`/anime/${r.external_id}`)}
                 >
-                  {r.already_in_db
-                    ? "Já no catálogo"
-                    : importingId === r.external_id
-                    ? "Importando…"
-                    : "Importar"}
-                </button>
-              </div>
-            ))}
+                  {r.cover && <img src={r.cover} alt="" />}
+                  <div className="search-result__info">
+                    <strong>{r.title_english || r.title}</strong>
+                    <span>
+                      {r.year || "—"} · {(r.genres || []).slice(0, 3).join(", ")}
+                    </span>
+                  </div>
+                  <button
+                    className="btn btn-ghost"
+                    disabled={r.already_in_db || importingId === r.external_id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleImport(r.external_id);
+                    }}
+                  >
+                    {r.already_in_db
+                      ? "Já no catálogo"
+                      : importingId === r.external_id
+                      ? "Importando…"
+                      : "Importar"}
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         )}
       </section>
@@ -188,45 +195,6 @@ export default function Catalog() {
           </>
         )}
       </div>
-
-      {preview && (
-        <div className="preview-backdrop" onClick={closePreview}>
-          <div className="preview-modal card" onClick={(e) => e.stopPropagation()}>
-            <button className="preview-modal__close" onClick={closePreview} aria-label="Fechar">
-              ×
-            </button>
-
-            {preview.loading ? (
-              <Loading label="Buscando no AniList" />
-            ) : preview.error ? (
-              <p className="error-text">{preview.error}</p>
-            ) : (
-              <div className="preview-modal__body">
-                {preview.data.cover && <img src={preview.data.cover} alt="" />}
-                <div>
-                  <h3 style={{ textTransform: "none", letterSpacing: 0, fontSize: "1.3rem" }}>
-                    {preview.data.title_english || preview.data.title}
-                  </h3>
-                  <p className="mono" style={{ color: "var(--ink-faint)", marginTop: "0.4rem" }}>
-                    {preview.data.year || "—"} · {preview.data.episodes ?? "?"} ep · {preview.data.status}
-                  </p>
-                  <div className="detail-genres" style={{ marginTop: "0.8rem" }}>
-                    {(preview.data.genres || []).map((g) => <span key={g}>{g}</span>)}
-                  </div>
-                  <button
-                    className="btn btn-primary"
-                    style={{ marginTop: "1.25rem" }}
-                    disabled={preview.data.already_in_db || importingId === preview.data.external_id}
-                    onClick={() => handleImport(preview.data.external_id)}
-                  >
-                    {preview.data.already_in_db ? "Já no catálogo" : "Importar para o catálogo"}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

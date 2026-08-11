@@ -110,7 +110,7 @@ def recommend_by_anime(
     except Exception as e:
         print(f"❌ Erro: {e}")
         raise HTTPException(500, f"Erro ao buscar recomendações: {str(e)}")
-    
+   
     
 @router.get("/personalized")
 def get_personalized_recommendations(

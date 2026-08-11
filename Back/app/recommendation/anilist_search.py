@@ -138,63 +138,27 @@ class AniListSearchRecommender:
         query_fields = []
         variables = {"perPage": limit}
 
-        # SEMPRE ADICIONA type: ANIME
         query_fields.append(self._get_media_type_field())
 
-        # SEARCH: define search_text ANTES de usar
-        search_text = interpreted.get("search")
-        
-        if not search_text:
-            description = interpreted.get("description_en", "")
-            clean_desc = re.sub(r'[^\w\s]', '', description.lower())
-            keywords = clean_desc.split()
-            stopwords = {
-                "i", "want", "me", "you", "he", "she", "it", "we", "they", 
-                "the", "a", "an", "of", "for", "on", "at", "to", "in", "with", 
-                "without", "and", "or", "but", "by", "from", "into", "through", 
-                "during", "including", "anime", "quero", "gostaria", "procuro", 
-                "busco", "like", "similar", "about"
-            }
-            keywords = [w for w in keywords if w not in stopwords and len(w) > 2]
-            if keywords:
-                search_text = " ".join(keywords[:4])
-                print(f"🔍 Palavras-chave extraídas: {search_text}")
-            else:
-                search_text = None
-
-        if search_text:
-            query_fields.append("search: $search")
-            variables["search"] = search_text
-            print(f"🔍 Search final: {search_text}")
-
-        # GENRES
         if interpreted.get("genres"):
-            main_genre = interpreted["genres"][0]
             query_fields.append("genre_in: $genres")
-            variables["genres"] = [main_genre]
-            print(f"🏷️ Gênero principal: {main_genre}")
-            
-            if len(interpreted["genres"]) > 1:
-                additional = " ".join(interpreted["genres"][1:])
-                if search_text:
-                    variables["search"] = f"{search_text} {additional}"
-                else:
-                    variables["search"] = additional
-                    query_fields.append("search: $search")
-                print(f"🔍 Busca com gêneros adicionais: {additional}")
+            variables["genres"] = interpreted["genres"]
+            print(f"🏷️ Gêneros: {interpreted['genres']}")
 
-        # EXCLUDED GENRES
+        if interpreted.get("tags"):
+            query_fields.append("tag_in: $tags")
+            variables["tags"] = interpreted["tags"]
+            print(f"🏷️ Tags: {interpreted['tags']}")
+
         if interpreted.get("excluded_genres"):
             query_fields.append("genre_not_in: $excludedGenres")
             variables["excludedGenres"] = interpreted["excluded_genres"]
 
-        # YEAR
         if interpreted.get("year") is not None:
             query_fields.append("seasonYear: $year")
             variables["year"] = interpreted["year"]
             print(f"📅 Ano: {interpreted['year']}")
 
-        # SCORE
         if interpreted.get("min_score") is not None:
             query_fields.append("averageScore_greater: $minScore")
             variables["minScore"] = interpreted["min_score"]
@@ -202,22 +166,18 @@ class AniListSearchRecommender:
             query_fields.append("averageScore_lesser: $maxScore")
             variables["maxScore"] = interpreted["max_score"]
 
-        # STATUS
         if interpreted.get("status"):
             query_fields.append("status: $status")
             variables["status"] = interpreted["status"]
 
-        # COUNTRY
         if interpreted.get("country"):
             query_fields.append("countryOfOrigin: $country")
             variables["country"] = interpreted["country"]
 
-        # SOURCE
         if interpreted.get("source"):
             query_fields.append("source: $source")
             variables["source"] = interpreted["source"]
 
-        # EPISODES
         if interpreted.get("min_episodes") is not None:
             query_fields.append("episodes_greater: $minEpisodes")
             variables["minEpisodes"] = interpreted["min_episodes"]
@@ -225,7 +185,6 @@ class AniListSearchRecommender:
             query_fields.append("episodes_lesser: $maxEpisodes")
             variables["maxEpisodes"] = interpreted["max_episodes"]
 
-        # ADULT
         if interpreted.get("is_adult") is not None:
             query_fields.append("isAdult: $isAdult")
             variables["isAdult"] = interpreted["is_adult"]
