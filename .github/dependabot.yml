@@ -1,14 +1,14 @@
 version: 2
 updates:
   - package-ecosystem: "pip"
-    directory: "/Back"
+    directory: "/back"
     schedule:
       interval: "weekly"
     commit-message:
       prefix: "deps"
 
   - package-ecosystem: "npm"
-    directory: "/Front"
+    directory: "/front"
     schedule:
       interval: "weekly"
     commit-message:
