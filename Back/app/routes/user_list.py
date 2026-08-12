@@ -208,17 +208,17 @@ def remove_anime_from_list(
 ):
     internal_id = resolve_anime_id(db, anime_id)
     if internal_id is None:
-        raise HTTPException(404, "Anime não encontrado")
-
+        raise HTTPException(404, "Anime não encontrado na sua lista")
+    
     user_anime = db.query(UserAnimeStatus).filter(
         UserAnimeStatus.user_id == current_user.id,
         UserAnimeStatus.anime_id == internal_id
     ).first()
-
+    
     if not user_anime:
         raise HTTPException(404, "Anime não encontrado na sua lista")
-
+    
     db.delete(user_anime)
     db.commit()
-
+    
     return None

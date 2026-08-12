@@ -25,6 +25,7 @@ export default function AnimeDetail() {
   const [loadingSimilar, setLoadingSimilar] = useState(true);
   const [listEntry, setListEntry] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
 
   const { control, watch, setValue, getValues } = useForm({
     defaultValues: {
@@ -56,12 +57,12 @@ export default function AnimeDetail() {
   useEffect(() => {
     setAnime(null);
     console.log("🔍 Buscando external_id:", id);
-    
+
     animesApi.getAnimeByExternalId(id)
       .then((data) => {
         console.log("📦 Dados recebidos:", data);
         setAnime(data);
-        
+
         if (data.is_in_list) {
           setListEntry({
             status: data.user_status,
@@ -136,6 +137,22 @@ export default function AnimeDetail() {
     }
   }
 
+  async function handleRemove() {
+    if (isRemoving) return;
+
+    setIsRemoving(true);
+    try {
+      await listApi.removeFromList(anime.id);
+      setListEntry(null);
+      setValue("status", "planned");
+      setValue("score", "");
+    } catch (error) {
+      console.error("Erro ao remover:", error);
+    } finally {
+      setIsRemoving(false);
+    }
+  }
+
   if (!anime) return <Loading label="Carregando anime" />;
 
   const isInList = listEntry !== null;
@@ -205,9 +222,7 @@ export default function AnimeDetail() {
               />
 
               <div className="detail-score-input">
-                <label htmlFor="score" className="eyebrow">
-                  Nota
-                </label>
+                <label htmlFor="score" className="eyebrow">Nota</label>
                 <Controller
                   name="score"
                   control={control}
@@ -227,18 +242,19 @@ export default function AnimeDetail() {
               </div>
 
               {!isInList ? (
-                <button
-                  className="btn btn-primary"
-                  onClick={handleAdd}
-                  disabled={isSaving}
-                >
+                <button className="btn btn-primary" onClick={handleAdd} disabled={isSaving}>
                   {isSaving ? "Adicionando…" : "Adicionar à lista"}
                 </button>
               ) : (
-                <div className="detail-auto-save-status">
-                  {isSaving ? (
-                    <span className="text-muted">💾 Salvando…</span>
-                  ) : null}
+                <div className="detail-actions-buttons">
+                  <button className="btn btn-danger" onClick={handleRemove} disabled={isRemoving}>
+                    {isRemoving ? "Removendo…" : "Remover da lista"}
+                  </button>
+                  <div className="detail-auto-save-status">
+                    {isSaving ? (
+                      <span className="text-muted">💾 Salvando…</span>
+                    ) : null}
+                  </div>
                 </div>
               )}
             </div>
