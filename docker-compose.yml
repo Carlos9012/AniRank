@@ -1,0 +1,36 @@
+services:
+  backend:
+    build:
+      context: ./Back
+      dockerfile: Dockerfile
+    container_name: anirank-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - USE_GEMINI=${USE_GEMINI:-false}
+      - DEBUG=${DEBUG:-false}
+    restart: unless-stopped
+    networks:
+      - anirank-network
+
+  frontend:
+    build:
+      context: ./Front
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://backend:8000}
+    container_name: anirank-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - anirank-network
+
+networks:
+  anirank-network:
+    driver: bridge

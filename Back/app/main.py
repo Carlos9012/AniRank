@@ -26,10 +26,12 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "http://localhost",
+        "http://localhost:80",
+        "http://127.0.0.1",
+        "http://127.0.0.1:80",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-        "http://localhost:3000", 
-        "http://localhost:8080",
         "https://anirank.vercel.app",
     ],
     allow_credentials=True,
