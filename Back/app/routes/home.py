@@ -2,7 +2,6 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List, Dict, Any
 import pandas as pd
 
 from app.database import get_db

@@ -1,6 +1,4 @@
-﻿# app/main.py
-
-from datetime import datetime
+﻿from datetime import datetime
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
