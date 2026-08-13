@@ -1,13 +1,15 @@
-﻿import sys
-import os
+﻿import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy import text
+
 from app.database import engine
 
 
 def create_enums():
-    
+
     enums = [
         """
         DO $$ BEGIN
@@ -22,7 +24,6 @@ def create_enums():
             WHEN duplicate_object THEN null;
         END $$;
         """,
-        
         """
         DO $$ BEGIN
             CREATE TYPE mediaformat AS ENUM (
@@ -35,7 +36,6 @@ def create_enums():
             WHEN duplicate_object THEN null;
         END $$;
         """,
-        
         """
         DO $$ BEGIN
             CREATE TYPE mediasource AS ENUM (
@@ -45,13 +45,13 @@ def create_enums():
         EXCEPTION
             WHEN duplicate_object THEN null;
         END $$;
-        """
+        """,
     ]
-    
+
     print("=" * 50)
     print("🔧 Criando ENUMs...")
     print("=" * 50)
-    
+
     with engine.connect() as conn:
         for enum_sql in enums:
             try:
@@ -60,7 +60,7 @@ def create_enums():
                 print("✅ ENUM criado com sucesso!")
             except Exception as e:
                 print(f"❌ Erro: {e}")
-    
+
     print("=" * 50)
     print("✅ ENUMs criados!")
     print("📌 MediaStatus: FINISHED, RELEASING, NOT_YET_RELEASED, CANCELLED, HIATUS")

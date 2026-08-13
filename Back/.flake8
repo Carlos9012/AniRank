@@ -1,0 +1,6 @@
+[flake8]
+max-line-length = 127
+extend-ignore = E203, E302, E303, E305, E402, E501, F541, W291, W293, W292
+per-file-ignores =
+    app/scripts/*: E402
+    app/services/gemini_service.py: E501

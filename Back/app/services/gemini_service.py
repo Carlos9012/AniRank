@@ -1,6 +1,8 @@
 ﻿import json
+from typing import Any, Dict
+
 import requests
-from typing import Dict, Any, Optional
+
 from app.config import settings
 
 
@@ -15,7 +17,7 @@ class GeminiService:
         self.url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
 
     def interpret_query(self, description: str) -> Dict[str, Any]:
-        prompt = fprompt = f"""
+        prompt = f"""
             Você é um assistente que traduz pedidos de usuários em filtros estruturados para busca de animes na API AniList.
 
             Descrição do usuário: "{description}"
@@ -91,22 +93,14 @@ class GeminiService:
             Retorne APENAS o JSON, sem explicações ou formatação extra.
             """
 
-        payload = {
-            "contents": [
-                {
-                    "parts": [
-                        {"text": prompt}
-                    ]
-                }
-            ]
-        }
+        payload = {"contents": [{"parts": [{"text": prompt}]}]}
 
         try:
             response = requests.post(
                 self.url,
                 json=payload,
                 headers={"Content-Type": "application/json"},
-                timeout=30
+                timeout=30,
             )
             response.raise_for_status()
 
@@ -134,7 +128,7 @@ class GeminiService:
                 "min_episodes": result.get("min_episodes"),
                 "max_episodes": result.get("max_episodes"),
                 "is_adult": result.get("is_adult"),
-                "description_en": result.get("description_en", description)
+                "description_en": result.get("description_en", description),
             }
 
         except Exception as e:
@@ -155,5 +149,5 @@ class GeminiService:
                 "min_episodes": None,
                 "max_episodes": None,
                 "is_adult": None,
-                "description_en": description
+                "description_en": description,
             }
