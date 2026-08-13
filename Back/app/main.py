@@ -1,4 +1,6 @@
-﻿from datetime import datetime
+﻿# app/main.py
+
+from datetime import datetime
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,7 +8,13 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
-from app.routes import animes_router, auth_router, list_router, recommendations
+from app.routes import (
+    animes_router,
+    auth_router,
+    list_router,
+    recommendations,
+    home_router,
+)
 
 app = FastAPI(
     title=settings.app_name,
@@ -40,14 +48,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# INCLUIR ROTAS
 app.include_router(auth_router)
 app.include_router(list_router)
 app.include_router(animes_router)
-app.include_router(recommendations.router)
+app.include_router(recommendations)
+app.include_router(home_router)
 
 # ENDPOINTS BÁSICOS
-
 
 @app.get("/")
 async def root():
@@ -58,7 +65,6 @@ async def root():
         "docs": "/docs",
         "health": "/health",
     }
-
 
 @app.get("/health")
 async def health_check(db: Session = Depends(get_db)):
@@ -76,7 +82,6 @@ async def health_check(db: Session = Depends(get_db)):
         "version": settings.app_version,
         "debug": settings.debug,
     }
-
 
 @app.get("/info")
 async def info():
