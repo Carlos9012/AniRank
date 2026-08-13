@@ -16,7 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./Front
+        working-directory: ./front
+
+      env:
+        ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +29,7 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: Front/package-lock.json
+          cache-dependency-path: front/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -40,4 +43,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
-          path: Front/dist
+          path: front/dist
