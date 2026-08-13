@@ -4,12 +4,12 @@ on:
   push:
     branches: [ main, develop ]
     paths:
-      - 'Front/**'
+      - 'front/**'
       - '.github/workflows/frontend-ci.yml'
   pull_request:
     branches: [ main ]
     paths:
-      - 'Front/**'
+      - 'front/**'
 
 jobs:
   build:
@@ -17,9 +17,6 @@ jobs:
     defaults:
       run:
         working-directory: ./front
-
-      env:
-        ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
     steps:
       - uses: actions/checkout@v4
